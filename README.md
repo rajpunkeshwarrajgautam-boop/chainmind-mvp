@@ -197,3 +197,7 @@ See `docs/deployment/oidc-scope-groups.md`. JWT remains the primary integration 
 ## Deploy Next.js to Vercel + GitHub
 
 See `docs/deployment/vercel-and-github.md` (root directory **`web`**, set `API_ORIGIN` + `NEXT_PUBLIC_API_ORIGIN`). The Python API must be hosted separately.
+
+**Live shell (Vercel):** [https://chainmind-mvp-web.vercel.app](https://chainmind-mvp-web.vercel.app)  
+**Source (GitHub):** [https://github.com/rajpunkeshwarrajgautam-boop/chainmind-mvp](https://github.com/rajpunkeshwarrajgautam-boop/chainmind-mvp)  
+Restore CI workflows after `gh auth refresh -s workflow`: `docs/deployment/github-workflows-restore.md`
