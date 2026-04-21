@@ -63,3 +63,16 @@ npx vercel --prod
 ```
 
 Link picks up `vercel.json` if present; set env vars in the Vercel dashboard or `npx vercel env add`.
+
+## 5) Verify API URL, rewrites, and CORS
+
+After the API is actually deployed (Render shows a **Web Service**, not an empty hostname), run:
+
+```powershell
+cd "D:\ai company\chainmind-mvp"
+.\scripts\verify_vercel_api_connectivity.ps1
+# or, against another API:
+.\scripts\verify_vercel_api_connectivity.ps1 -ApiOrigin "https://your-api.example.com"
+```
+
+The script fails fast if Render returns `x-render-routing: no-server` (no service at that URL). It then checks an OPTIONS preflight and a GET through the Vercel `/api/*` rewrite.

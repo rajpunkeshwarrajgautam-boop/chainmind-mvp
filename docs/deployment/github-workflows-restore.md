@@ -26,3 +26,5 @@ If you prefer not to use `git checkout` from an old commit, open the tree at com
 ## Verify
 
 - Actions tab should show workflows on the next push to `main`.
+
+If `gh auth status` still omits the `workflow` scope but `git push` succeeds, your Git remote may be using a **personal access token** (or other credential) with permission to update workflow files; the Actions tab is what matters.
