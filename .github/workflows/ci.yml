@@ -18,14 +18,14 @@ jobs:
       - name: Tests
         env:
           ENVIRONMENT: test
-          DATABASE_URL: sqlite:///:memory:
+          DATABASE_URL: "sqlite:///:memory:"
           JWT_SECRET: ci-jwt-secret-minimum-32-characters-long
           CELERY_TASK_ALWAYS_EAGER: "true"
         run: pytest tests/ -q
       - name: Vertical slice smoke (in-process)
         env:
           ENVIRONMENT: test
-          DATABASE_URL: sqlite:///:memory:
+          DATABASE_URL: "sqlite:///:memory:"
           JWT_SECRET: ci-jwt-secret-minimum-32-characters-long
           CELERY_TASK_ALWAYS_EAGER: "true"
         run: python scripts/verify_vertical_slice.py --in-process
