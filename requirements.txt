@@ -1,0 +1,40 @@
+# Core API
+fastapi>=0.115.0,<1.0.0
+uvicorn[standard]>=0.32.0,<1.0.0
+python-multipart>=0.0.9
+pydantic>=2.10.0,<3.0.0
+pydantic-settings>=2.6.0,<3.0.0
+email-validator>=2.0.0,<3.0.0
+
+# Data & ML
+pandas>=2.2.0,<3.0.0
+scikit-learn>=1.5.0,<2.0.0
+numpy>=1.26.0,<3.0.0
+jinja2>=3.1.0,<4.0.0
+
+# Persistence & jobs
+sqlalchemy>=2.0.36,<3.0.0
+alembic>=1.14.0,<2.0.0
+psycopg2-binary>=2.9.10,<3.0.0
+redis>=5.0.0,<6.0.0
+celery>=5.4.0,<6.0.0
+
+# Security
+python-jose[cryptography]>=3.3.0,<4.0.0
+passlib>=1.7.4,<2.0.0
+
+# Ops
+structlog>=24.4.0,<26.0.0
+prometheus-client>=0.21.0,<1.0.0
+slowapi>=0.1.9,<1.0.0
+
+# Billing (skeleton)
+stripe>=11.0.0,<13.0.0
+
+httpx>=0.27.0,<1.0.0
+authlib>=1.3.2,<2.0.0
+boto3>=1.35.0,<2.0.0
+itsdangerous>=2.2.0,<3.0.0
+
+# Tests
+pytest>=8.0.0,<9.0.0

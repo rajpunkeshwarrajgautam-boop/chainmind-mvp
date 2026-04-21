@@ -1,0 +1,8 @@
+{
+  "title": "ChainMind (interfaz web)",
+  "subtitle": "Registra un inquilino para desarrollo.",
+  "tenant_slug": "Identificador del inquilino",
+  "email": "Correo",
+  "password": "Contraseña (10+ caracteres)",
+  "register": "Registrar inquilino"
+}

@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ChainMind — Supply intelligence MVP</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.6/dist/chart.umd.min.js"></script>
+</head>
+<body class="bg-gradient-to-br from-blue-50 to-indigo-100 min-h-screen">
+    <div class="container mx-auto px-4 py-8 max-w-7xl">
+        <header class="text-center mb-8">
+            <h1 class="text-4xl font-bold text-indigo-800 mb-2">ChainMind</h1>
+            <p class="text-lg text-gray-600">Forecasting, inventory, disruption checks — single MVP surface</p>
+            <div class="mt-4 flex flex-wrap items-center justify-center gap-3 text-sm">
+                <label class="text-gray-600">API key (optional)</label>
+                <input id="apiKey" type="password" placeholder="CHAINMIND_API_KEY if set"
+                    class="border rounded-md px-3 py-1 w-64 max-w-full" autocomplete="off">
+                <button type="button" onclick="localStorage.setItem('chainmindApiKey', document.getElementById('apiKey').value)"
+                    class="px-3 py-1 rounded-md bg-gray-200 hover:bg-gray-300">Save locally</button>
+                <button type="button" onclick="document.getElementById('apiKey').value=''; localStorage.removeItem('chainmindApiKey')"
+                    class="px-3 py-1 rounded-md border border-gray-300">Clear</button>
+            </div>
+        </header>
+
+        <nav class="flex flex-wrap justify-center gap-2 mb-8">
+            <button type="button" data-tab="forecast" class="tab-btn px-4 py-2 rounded-full bg-indigo-600 text-white text-sm font-semibold">Forecast</button>
+            <button type="button" data-tab="inventory" class="tab-btn px-4 py-2 rounded-full bg-white text-gray-700 text-sm font-semibold border">Inventory</button>
+            <button type="button" data-tab="risk" class="tab-btn px-4 py-2 rounded-full bg-white text-gray-700 text-sm font-semibold border">Disruption risk</button>
+            <button type="button" data-tab="scenarios" class="tab-btn px-4 py-2 rounded-full bg-white text-gray-700 text-sm font-semibold border">What-if</button>
+            <button type="button" data-tab="integrations" class="tab-btn px-4 py-2 rounded-full bg-white text-gray-700 text-sm font-semibold border">Integrations</button>
+            <button type="button" data-tab="alerts" class="tab-btn px-4 py-2 rounded-full bg-white text-gray-700 text-sm font-semibold border">Alerts</button>
+        </nav>
+
+        <section id="panel-forecast" class="tab-panel">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <div class="bg-white rounded-xl shadow-lg p-6">
+                    <h2 class="text-2xl font-bold text-gray-800 mb-4">Data upload</h2>
+                    <ol class="list-decimal list-inside space-y-2 text-gray-600 text-sm mb-6">
+                        <li>Upload daily history (CSV: date, sales)</li>
+                        <li>Model blends calendar, rolling, and lag features</li>
+                        <li>Review next 30 days with residual-based bands</li>
+                    </ol>
+                    <pre class="bg-gray-100 p-3 rounded text-sm overflow-x-auto mb-6">date,sales
+2024-01-01,100</pre>
+                    <form action="/upload" method="post" enctype="multipart/form-data" class="space-y-4">
+                        <input type="file" name="file" accept=".csv" required
+                            class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:bg-indigo-50 file:text-indigo-700">
+                        <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3 px-4 rounded-lg">Generate forecast</button>
+                    </form>
+                    <form action="/generate-sample" method="post" class="mt-4">
+                        <button type="submit" class="w-full bg-gray-200 hover:bg-gray-300 text-gray-800 font-medium py-2 px-4 rounded-lg">Use sample data</button>
+                    </form>
+                </div>
+                <div class="bg-white rounded-xl shadow-lg p-6">
+                    <h2 class="text-2xl font-bold text-gray-800 mb-4">Forecast results</h2>
+                    {% if result %}
+                        {% if result.success %}
+                            <div class="mb-4 flex flex-wrap gap-3 justify-between items-center">
+                                <span class="text-sm text-gray-600">Next {{ result.dates|length }} days</span>
+                                <span class="bg-green-100 text-green-800 text-xs font-semibold px-2.5 py-1 rounded">
+                                    Fit score {{ "%.1f"|format(result.accuracy_pct) }}%
+                                </span>
+                            </div>
+                            <p class="text-xs text-gray-500 mb-3">Bands use ±1.96× residual std from training — illustrative, not calibrated prediction intervals.</p>
+                            <div class="h-72">
+                                <canvas id="forecastChart"></canvas>
+                            </div>
+                            <ul class="mt-4 text-sm text-gray-600 space-y-1">
+                                <li>Peak day: {{ "%.0f"|format(result.insights.peak) }} units</li>
+                                <li>Low day: {{ "%.0f"|format(result.insights.low) }} units</li>
+                                <li>Average: {{ "%.0f"|format(result.insights.avg) }} units / day</li>
+                            </ul>
+                            <div class="overflow-x-auto max-h-64 mt-4">
+                                <table class="min-w-full divide-y divide-gray-200 text-sm">
+                                    <thead class="bg-gray-50 sticky top-0">
+                                        <tr>
+                                            <th class="px-3 py-2 text-left text-xs text-gray-500 uppercase">Date</th>
+                                            <th class="px-3 py-2 text-left text-xs text-gray-500 uppercase">Fcst</th>
+                                            <th class="px-3 py-2 text-left text-xs text-gray-500 uppercase">Band</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="divide-y divide-gray-200">
+                                        {% for i in range(result.dates|length) %}
+                                        <tr>
+                                            <td class="px-3 py-2 whitespace-nowrap">{{ result.dates[i] }}</td>
+                                            <td class="px-3 py-2 whitespace-nowrap font-medium text-indigo-600">{{ "%.0f"|format(result.predictions[i]) }}</td>
+                                            <td class="px-3 py-2 whitespace-nowrap text-xs text-gray-500">
+                                                {{ "%.0f"|format(result.lower_bound[i]) }} – {{ "%.0f"|format(result.upper_bound[i]) }}
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        {% else %}
+                            <div class="bg-red-50 border border-red-200 rounded-lg p-4 text-sm">
+                                <p class="text-red-700 font-medium">{{ result.message }}</p>
+                                {% if result.error %}<p class="text-red-500 mt-2 font-mono text-xs">{{ result.error }}</p>{% endif %}
+                            </div>
+                        {% endif %}
+                    {% else %}
+                        <p class="text-center text-gray-500 py-10">Upload a CSV or generate sample data to populate this panel.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </section>
+
+        <section id="panel-inventory" class="tab-panel hidden">
+            <div class="bg-white rounded-xl shadow-lg p-6 space-y-4">
+                <h2 class="text-2xl font-bold text-gray-800">Inventory optimizer</h2>
+                <p class="text-sm text-gray-600">Computes safety stock, reorder point, EOQ, and a simple health score. Optionally paste sales rows to infer demand volatility.</p>
+                <div class="grid md:grid-cols-2 gap-4 text-sm">
+                    <label class="block">Current on-hand
+                        <input id="inv_on_hand" type="number" value="850" class="mt-1 w-full border rounded-md px-3 py-2">
+                    </label>
+                    <label class="block">Lead time (days)
+                        <input id="inv_lead" type="number" value="10" class="mt-1 w-full border rounded-md px-3 py-2">
+                    </label>
+                    <label class="block">Ordering cost ($)
+                        <input id="inv_order_cost" type="number" value="65" class="mt-1 w-full border rounded-md px-3 py-2">
+                    </label>
+                    <label class="block">Unit cost ($)
+                        <input id="inv_unit_cost" type="number" value="12" class="mt-1 w-full border rounded-md px-3 py-2">
+                    </label>
+                    <label class="block">Holding cost rate / yr (0-1)
+                        <input id="inv_hold" type="number" step="0.01" value="0.22" class="mt-1 w-full border rounded-md px-3 py-2">
+                    </label>
+                    <label class="block">Service Z (e.g. 1.65 ≈ 95%)
+                        <input id="inv_z" type="number" step="0.05" value="1.65" class="mt-1 w-full border rounded-md px-3 py-2">
+                    </label>
+                </div>
+                <label class="block text-sm">Optional sales_data JSON (same shape as API) — leave blank to use manual means below
+                    <textarea id="inv_sales_json" rows="4" class="mt-1 w-full border rounded-md px-3 py-2 font-mono text-xs" placeholder='[{"date":"2024-01-01","sales":120}, ...]'></textarea>
+                </label>
+                <div class="grid md:grid-cols-2 gap-4 text-sm">
+                    <label class="block">Manual daily mean (if no JSON)
+                        <input id="inv_mu" type="number" step="0.1" value="95" class="mt-1 w-full border rounded-md px-3 py-2">
+                    </label>
+                    <label class="block">Manual daily std
+                        <input id="inv_sigma" type="number" step="0.1" value="18" class="mt-1 w-full border rounded-md px-3 py-2">
+                    </label>
+                </div>
+                <button type="button" onclick="runInventory()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold px-4 py-2 rounded-lg">Run optimization</button>
+                <pre id="inv_out" class="bg-gray-900 text-green-100 text-xs rounded-lg p-4 overflow-x-auto hidden"></pre>
+            </div>
+        </section>
+
+        <section id="panel-risk" class="tab-panel hidden">
+            <div class="bg-white rounded-xl shadow-lg p-6 space-y-4">
+                <h2 class="text-2xl font-bold text-gray-800">Disruption intelligence</h2>
+                <p class="text-sm text-gray-600">Heuristic supplier scoring with mitigations (demo logic, not investment advice).</p>
+                <textarea id="risk_json" rows="12" class="w-full border rounded-md px-3 py-2 font-mono text-xs"></textarea>
+                <div class="flex gap-2">
+                    <button type="button" onclick="runRisk()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold px-4 py-2 rounded-lg">Analyze</button>
+                    <button type="button" onclick="loadRiskSample()" class="border border-gray-300 px-4 py-2 rounded-lg text-sm">Load sample</button>
+                </div>
+                <pre id="risk_out" class="bg-gray-900 text-green-100 text-xs rounded-lg p-4 overflow-x-auto hidden"></pre>
+            </div>
+        </section>
+
+        <section id="panel-scenarios" class="tab-panel hidden">
+            <div class="bg-white rounded-xl shadow-lg p-6 space-y-4">
+                <h2 class="text-2xl font-bold text-gray-800">What-if planner</h2>
+                <div class="grid md:grid-cols-2 gap-4 text-sm">
+                    <label class="block">Baseline daily demand
+                        <input id="wf_mu" type="number" value="120" class="mt-1 w-full border rounded-md px-3 py-2">
+                    </label>
+                    <label class="block">Demand multiplier
+                        <input id="wf_mult" type="number" step="0.05" value="1.15" class="mt-1 w-full border rounded-md px-3 py-2">
+                    </label>
+                    <label class="block">On-hand units
+                        <input id="wf_stock" type="number" value="2000" class="mt-1 w-full border rounded-md px-3 py-2">
+                    </label>
+                    <label class="block">Inbound (arriving this cycle)
+                        <input id="wf_inbound" type="number" value="0" class="mt-1 w-full border rounded-md px-3 py-2">
+                    </label>
+                    <label class="block">Horizon (days)
+                        <input id="wf_horizon" type="number" value="45" class="mt-1 w-full border rounded-md px-3 py-2">
+                    </label>
+                </div>
+                <button type="button" onclick="runWhatIf()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold px-4 py-2 rounded-lg">Run scenario</button>
+                <pre id="wf_out" class="bg-gray-900 text-green-100 text-xs rounded-lg p-4 overflow-x-auto hidden"></pre>
+            </div>
+        </section>
+
+        <section id="panel-integrations" class="tab-panel hidden">
+            <div class="bg-white rounded-xl shadow-lg p-6 space-y-4">
+                <h2 class="text-2xl font-bold text-gray-800">Integration fabric</h2>
+                <p class="text-sm text-gray-600">Shows connector readiness — swap stubs for real credentials in production.</p>
+                <button type="button" onclick="loadIntegrations()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold px-4 py-2 rounded-lg">Refresh status</button>
+                <pre id="int_out" class="bg-gray-900 text-green-100 text-xs rounded-lg p-4 overflow-x-auto hidden"></pre>
+            </div>
+        </section>
+
+        <section id="panel-alerts" class="tab-panel hidden">
+            <div class="bg-white rounded-xl shadow-lg p-6 space-y-4">
+                <h2 class="text-2xl font-bold text-gray-800">System alerts</h2>
+                <p class="text-sm text-gray-600">In-memory feed from forecasts, inventory runs, and critical risk flags.</p>
+                <button type="button" onclick="loadAlerts()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold px-4 py-2 rounded-lg">Refresh</button>
+                <pre id="alerts_out" class="bg-gray-900 text-green-100 text-xs rounded-lg p-4 overflow-x-auto hidden"></pre>
+            </div>
+        </section>
+
+        <footer class="mt-12 text-center text-gray-500 text-sm space-y-2">
+            <p>API: <code class="bg-gray-100 px-2 py-0.5 rounded">/api/v1/forecast</code>,
+                <code class="bg-gray-100 px-2 py-0.5 rounded">/inventory/optimize</code>,
+                <code class="bg-gray-100 px-2 py-0.5 rounded">/disruptions/analyze</code>,
+                <code class="bg-gray-100 px-2 py-0.5 rounded">/integrations/status</code></p>
+            <p>Set <code class="bg-gray-100 px-2 py-0.5 rounded">CHAINMIND_API_KEY</code> to require <code class="bg-gray-100 px-2 py-0.5 rounded">X-API-Key</code> on versioned routes.</p>
+        </footer>
+    </div>
+
+    <script>
+        const defaultRisk = [
+            {"id":"s1","name":"Pacific Components","country":"CN","spend_share":0.42,"on_time_pct":82,"financial_health_score":68,"category":"electronics"},
+            {"id":"s2","name":"Midwest Plastics","country":"US","spend_share":0.18,"on_time_pct":94,"financial_health_score":81,"category":"automotive"},
+            {"id":"s3","name":"Iberia Foods","country":"ES","spend_share":0.27,"on_time_pct":88,"financial_health_score":72,"category":"food"}
+        ];
+        function apiHeaders() {
+            const headers = {"Content-Type": "application/json"};
+            const fromInput = document.getElementById("apiKey").value.trim();
+            const fromStore = localStorage.getItem("chainmindApiKey") || "";
+            const key = fromInput || fromStore;
+            if (key) headers["X-API-Key"] = key;
+            return headers;
+        }
+        function showTab(name) {
+            document.querySelectorAll(".tab-panel").forEach(p => p.classList.add("hidden"));
+            const panel = document.getElementById("panel-" + name);
+            if (panel) panel.classList.remove("hidden");
+            document.querySelectorAll(".tab-btn").forEach(b => {
+                const active = b.dataset.tab === name;
+                b.classList.toggle("bg-indigo-600", active);
+                b.classList.toggle("text-white", active);
+                b.classList.toggle("bg-white", !active);
+                b.classList.toggle("text-gray-700", !active);
+                b.classList.toggle("border", !active);
+            });
+        }
+        document.querySelectorAll(".tab-btn").forEach(btn => {
+            btn.addEventListener("click", () => showTab(btn.dataset.tab));
+        });
+        document.getElementById("apiKey").value = localStorage.getItem("chainmindApiKey") || "";
+        document.getElementById("risk_json").value = JSON.stringify(defaultRisk, null, 2);
+
+        async function runInventory() {
+            const payload = {
+                current_on_hand: Number(document.getElementById("inv_on_hand").value),
+                lead_time_days: Number(document.getElementById("inv_lead").value),
+                ordering_cost: Number(document.getElementById("inv_order_cost").value),
+                unit_cost: Number(document.getElementById("inv_unit_cost").value),
+                holding_cost_rate_annual: Number(document.getElementById("inv_hold").value),
+                service_level_z: Number(document.getElementById("inv_z").value),
+            };
+            const raw = document.getElementById("inv_sales_json").value.trim();
+            if (raw) {
+                payload.sales_data = JSON.parse(raw);
+            } else {
+                payload.daily_demand_mean = Number(document.getElementById("inv_mu").value);
+                payload.daily_demand_std = Number(document.getElementById("inv_sigma").value);
+            }
+            const res = await fetch("/api/v1/inventory/optimize", { method: "POST", headers: apiHeaders(), body: JSON.stringify(payload) });
+            const box = document.getElementById("inv_out");
+            box.classList.remove("hidden");
+            box.textContent = JSON.stringify(await res.json(), null, 2);
+        }
+        async function runRisk() {
+            const suppliers = JSON.parse(document.getElementById("risk_json").value);
+            const res = await fetch("/api/v1/disruptions/analyze", { method: "POST", headers: apiHeaders(), body: JSON.stringify({ suppliers }) });
+            const box = document.getElementById("risk_out");
+            box.classList.remove("hidden");
+            box.textContent = JSON.stringify(await res.json(), null, 2);
+        }
+        function loadRiskSample() {
+            document.getElementById("risk_json").value = JSON.stringify(defaultRisk, null, 2);
+        }
+        async function runWhatIf() {
+            const payload = {
+                daily_demand_mean: Number(document.getElementById("wf_mu").value),
+                demand_multiplier: Number(document.getElementById("wf_mult").value),
+                current_on_hand: Number(document.getElementById("wf_stock").value),
+                inbound_units: Number(document.getElementById("wf_inbound").value),
+                horizon_days: Number(document.getElementById("wf_horizon").value),
+            };
+            const res = await fetch("/api/v1/scenarios/what-if", { method: "POST", headers: apiHeaders(), body: JSON.stringify(payload) });
+            const box = document.getElementById("wf_out");
+            box.classList.remove("hidden");
+            box.textContent = JSON.stringify(await res.json(), null, 2);
+        }
+        async function loadIntegrations() {
+            const res = await fetch("/api/v1/integrations/status", { headers: apiHeaders() });
+            const box = document.getElementById("int_out");
+            box.classList.remove("hidden");
+            box.textContent = JSON.stringify(await res.json(), null, 2);
+        }
+        async function loadAlerts() {
+            const res = await fetch("/api/v1/notifications", { headers: apiHeaders() });
+            const box = document.getElementById("alerts_out");
+            box.classList.remove("hidden");
+            box.textContent = JSON.stringify(await res.json(), null, 2);
+        }
+    </script>
+
+    {% if result and result.success %}
+    <script>
+        const ctx = document.getElementById('forecastChart');
+        new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: {{ result.dates|tojson }},
+                datasets: [
+                    {
+                        label: 'Forecast',
+                        data: {{ result.predictions|tojson }},
+                        borderColor: 'rgb(79, 70, 229)',
+                        backgroundColor: 'rgba(79, 70, 229, 0.12)',
+                        borderWidth: 2,
+                        fill: true,
+                        tension: 0.15,
+                        pointRadius: 0,
+                    },
+                    {
+                        label: 'Lower',
+                        data: {{ result.lower_bound|tojson }},
+                        borderColor: 'rgb(148, 163, 184)',
+                        borderWidth: 1,
+                        borderDash: [6, 4],
+                        fill: false,
+                        pointRadius: 0,
+                    },
+                    {
+                        label: 'Upper',
+                        data: {{ result.upper_bound|tojson }},
+                        borderColor: 'rgb(148, 163, 184)',
+                        borderWidth: 1,
+                        borderDash: [6, 4],
+                        fill: false,
+                        pointRadius: 0,
+                    },
+                ],
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    x: { ticks: { maxTicksLimit: 10 } },
+                    y: { beginAtZero: true },
+                },
+                plugins: { legend: { position: 'top' } },
+            },
+        });
+    </script>
+    {% endif %}
+</body>
+</html>

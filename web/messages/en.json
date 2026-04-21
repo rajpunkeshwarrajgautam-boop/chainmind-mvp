@@ -1,0 +1,8 @@
+{
+  "title": "ChainMind web shell",
+  "subtitle": "Register a tenant for development. Production should use httpOnly cookies and full onboarding.",
+  "tenant_slug": "Tenant slug",
+  "email": "Email",
+  "password": "Password (10+ chars)",
+  "register": "Register tenant"
+}

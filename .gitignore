@@ -1,0 +1,12 @@
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.venv/
+*.db
+.verify-slice.db
+chainmind-local.db
+pilot-evidence/
+.env
+.vercel
+web/.next
+web/node_modules
