@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from pydantic import Field
+from pydantic import Field, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -29,9 +29,27 @@ class Settings(BaseSettings):
     access_token_expire_minutes: int = 60
 
     cors_origins: str = Field(
-        default="http://localhost:3000,http://127.0.0.1:3000,http://127.0.0.1:8000",
+        default=(
+            "http://localhost:3000,http://127.0.0.1:3000,http://127.0.0.1:8000,"
+            "https://chainmind-mvp-web.vercel.app"
+        ),
         description="Comma-separated origins.",
     )
+    cors_origin_regex: str | None = Field(
+        default=None,
+        description=(
+            "Optional regex for extra allowed origins (e.g. Vercel previews: "
+            "https://.*\\.vercel\\.app). Set CORS_ORIGIN_REGEX in production if needed."
+        ),
+    )
+
+    @field_validator("cors_origin_regex", mode="before")
+    @classmethod
+    def _empty_cors_regex_as_none(cls, value: object) -> object:
+        if value is None or value == "":
+            return None
+        return value
+
     trusted_hosts: str | None = Field(default=None, description="Comma-separated hosts for TrustedHostMiddleware.")
 
     # Legacy single-key auth (superseded by DB API keys + JWT)

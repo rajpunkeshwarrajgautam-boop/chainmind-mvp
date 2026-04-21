@@ -7,3 +7,9 @@ services:
     envVars:
       - key: PYTHON_VERSION
         value: "3.12.8"
+      # Web on Vercel (production + local). Add your own domains as needed.
+      - key: CORS_ORIGINS
+        value: "https://chainmind-mvp-web.vercel.app,http://localhost:3000,http://127.0.0.1:3000"
+      # Vercel preview deployments (*.vercel.app)
+      - key: CORS_ORIGIN_REGEX
+        value: "https://.*\\.vercel\\.app"

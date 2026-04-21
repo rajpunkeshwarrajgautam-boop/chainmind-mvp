@@ -44,6 +44,8 @@ The **FastAPI backend is not deployed by this flow** — Vercel hosts the `web/`
 
 **If the page loads but API calls fail:** set `API_ORIGIN` and `NEXT_PUBLIC_API_ORIGIN` in the Vercel project to your real API base URL, then redeploy. Until then, rewrites may still point at the default `http://127.0.0.1:8000` from build config.
 
+**Monorepo Git + Vercel:** run `vercel link` and `vercel git connect` from the repository root (where `.git` lives) so Vercel sees the GitHub repo. Set **Root Directory** to `web` in the project settings (or PATCH the project via the REST API). Production and Preview should both define `API_ORIGIN` / `NEXT_PUBLIC_API_ORIGIN`; if the CLI refuses Preview without a branch, use the REST API `POST /v10/projects/{id}/env?upsert=true` with `"target":["preview"]` and no `gitBranch` so the variables apply to all preview branches.
+
 ## 3) CORS on the API
 
 Add your Vercel domain(s) to the API env, e.g.:
