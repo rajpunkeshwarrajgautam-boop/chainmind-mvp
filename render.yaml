@@ -1,4 +1,16 @@
+# Render Blueprint: API + Redis. After first deploy, set DATABASE_URL in the dashboard
+# to a managed Postgres URL (same value as your production DB) — SQLite on ephemeral disk
+# is not suitable for multi-instance or worker setups.
+
 services:
+  - type: keyvalue
+    name: chainmind-kv
+    plan: free
+    maxmemoryPolicy: allkeys-lru
+    ipAllowList:
+      - source: 0.0.0.0/0
+        description: allow internal Render connections
+
   - type: web
     name: chainmind-mvp
     runtime: python
@@ -7,9 +19,30 @@ services:
     envVars:
       - key: PYTHON_VERSION
         value: "3.12.8"
-      # Web on Vercel (production + local). Add your own domains as needed.
+      - key: REDIS_URL
+        fromService:
+          name: chainmind-kv
+          type: keyvalue
+          property: connectionString
+      - key: CELERY_BROKER_URL
+        fromService:
+          name: chainmind-kv
+          type: keyvalue
+          property: connectionString
+      - key: CELERY_RESULT_BACKEND
+        fromService:
+          name: chainmind-kv
+          type: keyvalue
+          property: connectionString
+      # Run forecast tasks in the web process (no separate worker). Tradeoff: blocks briefly under load.
+      - key: CELERY_TASK_ALWAYS_EAGER
+        value: "true"
+      - key: JWT_SECRET
+        generateValue: true
+      # Set in dashboard: postgresql+psycopg2://... from Render Postgres or other host
+      - key: DATABASE_URL
+        sync: false
       - key: CORS_ORIGINS
         value: "https://chainmind-mvp-web.vercel.app,http://localhost:3000,http://127.0.0.1:3000"
-      # Vercel preview deployments (*.vercel.app)
       - key: CORS_ORIGIN_REGEX
         value: "https://.*\\.vercel\\.app"

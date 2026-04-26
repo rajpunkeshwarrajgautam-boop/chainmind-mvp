@@ -10,3 +10,6 @@ pilot-evidence/
 .vercel
 web/.next
 web/node_modules
+
+# AgentHub / local multi-agent sessions (optional)
+.agenthub/
