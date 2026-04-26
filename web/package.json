@@ -18,7 +18,7 @@
     "@types/react": "18.3.3",
     "eslint": "8.57.0",
     "eslint-config-next": "14.2.35",
-    "eslint-plugin-jsx-a11y": "6.9.0",
+    "eslint-plugin-jsx-a11y": "6.10.2",
     "typescript": "5.6.3"
   }
 }
