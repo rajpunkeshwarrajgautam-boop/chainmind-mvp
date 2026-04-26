@@ -1,6 +1,15 @@
 # ChainMind MVP
 
-FastAPI service with optional Next.js shell. **Production path is API-first:** register → JWT → sample or CSV upload → forecast → list or fetch job.
+FastAPI service with optional Next.js shell.
+
+**License:** [MIT](LICENSE) · **Contributing:** [CONTRIBUTING.md](CONTRIBUTING.md) · **Security:** [SECURITY.md](SECURITY.md)
+
+**Production path is API-first:** register → JWT → sample or CSV upload → forecast → list or fetch job.
+
+## Optional features (env-gated)
+
+- **Stripe billing** and **OIDC SSO** routes return **501** until `STRIPE_*` / `OIDC_*` variables are set (see `.env.example`).
+- **ERP/WMS connectors** under `/api/v1/integrations` are **template / audit** flows until real credentials and CDC are wired (`CONTRIBUTING.md` does not change that product scope).
 
 ## Run locally without Docker (recommended if you have no Docker)
 

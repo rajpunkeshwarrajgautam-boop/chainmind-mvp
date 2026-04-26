@@ -44,6 +44,8 @@ async def integration_reconcile(
         "checks_run": [c.get("name") for c in spec.get("reconciliation_checks", [])],
         "status": "template_only",
         "note": "Wire ERP credentials + CDC to execute checks; this persists the run for audit.",
+        "implementation": "mvp_stub",
+        "next_steps": "Add connector credentials to env, implement connector.execute in app/services/data_ingestion.py, then replace template_only status.",
     }
     run = IntegrationRun(
         tenant_id=_ctx.tenant_id,

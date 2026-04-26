@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 import uuid
 from typing import Annotated
 
@@ -18,6 +19,7 @@ from app.services.audit_service import write_audit
 from app.utils.csv_io import load_sales_frame
 
 router = APIRouter()
+log = logging.getLogger(__name__)
 
 
 def _read_upload_limited(raw: bytes, settings) -> str:
@@ -85,7 +87,7 @@ async def upload_and_forecast(
             put_bytes(key=storage_key, body=body_store, content_type=file.content_type)
             body_store = None
     except Exception:
-        pass
+        log.warning("S3 upload failed; storing bytes in DB instead", exc_info=True)
 
     up = UploadModel(
         tenant_id=ctx.tenant_id,

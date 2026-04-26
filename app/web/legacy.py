@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 from pathlib import Path
 
 import pandas as pd
@@ -20,6 +21,7 @@ from sqlalchemy.orm import Session
 
 ROOT_DIR = Path(__file__).resolve().parent.parent.parent
 templates = Jinja2Templates(directory=str(ROOT_DIR / "templates"))
+log = logging.getLogger(__name__)
 
 router = APIRouter(include_in_schema=False)
 
@@ -64,7 +66,7 @@ async def upload_file(
                     put_bytes(key=storage_key, body=body_store, content_type=file.content_type)
                     body_store = None
             except Exception:
-                pass
+                log.warning("S3 upload failed; storing bytes in DB instead", exc_info=True)
             up = UploadModel(
                 tenant_id=tenant.id,
                 user_id=None,
