@@ -203,6 +203,10 @@ Set `STRIPE_SECRET_KEY`, `STRIPE_PRICE_ID_STARTER`, and for webhooks `STRIPE_WEB
 
 See `docs/deployment/oidc-scope-groups.md`. JWT remains the primary integration for automation.
 
+## Deploy API (Render Blueprint)
+
+See `docs/deployment/render-blueprint.md` — sync `render.yaml`, confirm Key Value → `REDIS_URL` / Celery env wiring, and set **`DATABASE_URL`** to managed Postgres in the dashboard.
+
 ## Deploy Next.js to Vercel + GitHub
 
 See `docs/deployment/vercel-and-github.md` (root directory **`web`**, set `API_ORIGIN` + `NEXT_PUBLIC_API_ORIGIN`). The Python API must be hosted separately.

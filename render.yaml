@@ -1,6 +1,7 @@
 # Render Blueprint: API + Redis. After first deploy, set DATABASE_URL in the dashboard
 # to a managed Postgres URL (same value as your production DB) — SQLite on ephemeral disk
 # is not suitable for multi-instance or worker setups.
+# Dashboard checklist: docs/deployment/render-blueprint.md
 
 services:
   - type: keyvalue

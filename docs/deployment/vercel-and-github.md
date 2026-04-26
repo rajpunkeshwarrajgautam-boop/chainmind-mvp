@@ -82,3 +82,5 @@ The script fails fast if Render returns `x-render-routing: no-server` (no servic
 Root `render.yaml` provisions a **free Key Value** instance (Redis protocol) and wires `REDIS_URL` / Celery broker URLs into the **web** service. It sets **`CELERY_TASK_ALWAYS_EAGER=true`** so `forecast` jobs run in-process without a separate worker (fine for small demos; turn off and add a **worker** service for production scale).
 
 **You must set `DATABASE_URL` in the Render dashboard** (`sync: false` placeholder) to a real Postgres URL for production. `JWT_SECRET` is auto-generated on first deploy (`generateValue: true`).
+
+**Step-by-step (sync Blueprint, Redis wiring, Postgres):** [render-blueprint.md](./render-blueprint.md).

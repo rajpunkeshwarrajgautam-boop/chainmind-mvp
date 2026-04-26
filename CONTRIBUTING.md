@@ -29,14 +29,19 @@ npm run build
 
 ## Database migrations (Alembic)
 
-Alembic is configured under `alembic/`. The initial revision is a **no-op**; the app still calls `create_tables()` on startup for backward compatibility.
+Alembic lives under `alembic/`. **Strategy (MVP):** the app still calls `create_tables()` on every boot so a single process can stand up an empty database without a separate migrate step.
+
+- **`20260426_0001`** — empty baseline.
+- **`20260426_0002_initial_schema`** — if the `tenants` table does not exist yet, applies `Base.metadata.create_all` for the current ORM models; if tables already exist (normal after first API boot), this revision is a no-op. Offline `--sql` mode is not supported for `0002`.
 
 ```bash
 set PYTHONPATH=.
 alembic upgrade head
 ```
 
-For schema changes after the baseline, use `alembic revision --autogenerate -m "..."` (with a real `DATABASE_URL` reflecting your models) and review the generated ops before merging.
+For the next schema change, add a new revision (typically `alembic revision --autogenerate -m "..."` against a DB whose dialect matches production) and review the generated ops before merging.
+
+**Render / production:** after wiring Postgres, follow [docs/deployment/render-blueprint.md](docs/deployment/render-blueprint.md) to sync the Blueprint and set `DATABASE_URL` in the dashboard.
 
 ## Style
 
