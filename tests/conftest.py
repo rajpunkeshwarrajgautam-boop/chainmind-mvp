@@ -2,8 +2,34 @@ from __future__ import annotations
 
 import os
 import uuid
+import warnings
+from typing import Any, Callable
 
 import pytest
+
+# Authlib calls ``warnings.simplefilter("always", AuthlibDeprecationWarning)`` on import.
+# That filter is prepended *inside* pytest's per-test ``catch_warnings`` after pytest's own
+# ``filterwarnings``, so it wins over ``pytest.ini`` and surfaces noise. Skip only that call.
+_simplefilter_orig: Callable[..., Any] = warnings.simplefilter
+
+
+def _simplefilter_patched(
+    action: str,
+    category: type[Warning] = Warning,
+    lineno: int = 0,
+    append: bool = False,
+) -> None:
+    if (
+        action == "always"
+        and isinstance(category, type)
+        and issubclass(category, Warning)
+        and category.__name__ == "AuthlibDeprecationWarning"
+    ):
+        return
+    _simplefilter_orig(action, category, lineno, append)
+
+
+warnings.simplefilter = _simplefilter_patched  # type: ignore[assignment]
 
 os.environ.setdefault("ENVIRONMENT", "test")
 os.environ.setdefault("DATABASE_URL", "sqlite:///:memory:")

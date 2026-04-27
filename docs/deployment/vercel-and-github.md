@@ -1,5 +1,7 @@
 # Deploy the Next.js shell to Vercel + GitHub (fresh)
 
+**Environment variable matrix (all targets):** [environment-matrix.md](./environment-matrix.md).
+
 The **FastAPI backend is not deployed by this flow** — Vercel hosts the `web/` Next app only. Point `API_ORIGIN` at wherever your API runs (Render, Fly.io, Railway, VM, etc.).
 
 ## 1) GitHub (new repo)

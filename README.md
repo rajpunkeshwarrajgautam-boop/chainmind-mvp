@@ -2,7 +2,7 @@
 
 FastAPI service with optional Next.js shell.
 
-**License:** [MIT](LICENSE) · **Contributing:** [CONTRIBUTING.md](CONTRIBUTING.md) · **Security:** [SECURITY.md](SECURITY.md)
+**License:** [MIT](LICENSE) · **Contributing:** [CONTRIBUTING.md](CONTRIBUTING.md) · **Dev runbook:** [docs/engineering/developer-orchestration-runbook.md](docs/engineering/developer-orchestration-runbook.md) · **Security:** [SECURITY.md](SECURITY.md)
 
 **Production path is API-first:** register → JWT → sample or CSV upload → forecast → list or fetch job.
 
@@ -206,6 +206,8 @@ See `docs/deployment/oidc-scope-groups.md`. JWT remains the primary integration 
 ## Deploy API (Render Blueprint)
 
 See `docs/deployment/render-blueprint.md` — sync `render.yaml`, confirm Key Value → `REDIS_URL` / Celery env wiring, and set **`DATABASE_URL`** to managed Postgres in the dashboard.
+
+**All environments (API vs Vercel vs local env names):** `docs/deployment/environment-matrix.md`.
 
 ## Deploy Next.js to Vercel + GitHub
 
