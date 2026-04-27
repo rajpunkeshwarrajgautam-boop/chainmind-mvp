@@ -7,12 +7,14 @@ from app.ml.disruption_intel import disruption_intel
 from app.ml.inventory_optimizer import inventory_optimizer
 
 
+@pytest.mark.mvp_vertical_slice
 def test_health(client: TestClient):
     res = client.get("/health")
     assert res.status_code == 200
     assert res.json()["status"] == "ok"
 
 
+@pytest.mark.mvp_vertical_slice
 def test_ready(client: TestClient):
     res = client.get("/ready")
     # Redis may be unavailable in bare CI — database must be ok
@@ -21,12 +23,14 @@ def test_ready(client: TestClient):
     assert "database" in body
 
 
+@pytest.mark.mvp_vertical_slice
 def test_dashboard_root(client: TestClient):
     res = client.get("/")
     assert res.status_code == 200
     assert "ChainMind" in res.text
 
 
+@pytest.mark.mvp_vertical_slice
 def test_forecast_sample(client: TestClient, auth_headers: dict[str, str]):
     res = client.post(
         "/api/v1/forecast/sample",
@@ -39,6 +43,7 @@ def test_forecast_sample(client: TestClient, auth_headers: dict[str, str]):
     assert body["job_id"]
 
 
+@pytest.mark.mvp_vertical_slice
 def test_forecast_jobs_list(client: TestClient, auth_headers: dict[str, str]):
     client.post("/api/v1/forecast/sample", json={"days_ahead": 5, "history_days": 40}, headers=auth_headers)
     res = client.get("/api/v1/forecast/jobs", headers=auth_headers)
@@ -48,6 +53,7 @@ def test_forecast_jobs_list(client: TestClient, auth_headers: dict[str, str]):
     assert len(data["items"]) >= 1
 
 
+@pytest.mark.mvp_vertical_slice
 def test_upload_preview(client: TestClient, auth_headers: dict[str, str]):
     csv = "date,sales\n2024-01-01,10\n2024-01-02,12\n"
     res = client.post("/api/v1/uploads/preview", files={"file": ("t.csv", csv, "text/csv")}, headers=auth_headers)
@@ -57,6 +63,7 @@ def test_upload_preview(client: TestClient, auth_headers: dict[str, str]):
     assert "date" in body["columns"]
 
 
+@pytest.mark.mvp_vertical_slice
 def test_upload_forecast_multipart(client: TestClient, auth_headers: dict[str, str]):
     lines = ["date,sales"] + [f"2024-01-{i+1:02d},{100 + i}" for i in range(20)]
     csv = "\n".join(lines) + "\n"
@@ -74,6 +81,7 @@ def test_upload_forecast_multipart(client: TestClient, auth_headers: dict[str, s
     assert len(body.get("predictions", [])) == 5
 
 
+@pytest.mark.mvp_vertical_slice
 def test_openapi_includes_bearer_scheme(client: TestClient):
     r = client.get("/openapi.json")
     assert r.status_code == 200
@@ -83,6 +91,7 @@ def test_openapi_includes_bearer_scheme(client: TestClient):
     assert schemes["BearerAuth"]["type"] == "http"
 
 
+@pytest.mark.mvp_vertical_slice
 def test_forecast_v1(client: TestClient, auth_headers: dict[str, str]):
     payload = {
         "sales_data": [{"date": f"2024-01-{i+1:02d}", "sales": 100 + i} for i in range(20)],
@@ -96,6 +105,7 @@ def test_forecast_v1(client: TestClient, auth_headers: dict[str, str]):
     assert "job_id" in body
 
 
+@pytest.mark.offline_helper
 def test_inventory_optimizer_math():
     out = inventory_optimizer.calculate_optimal_stock_levels(
         {
@@ -114,6 +124,7 @@ def test_inventory_optimizer_math():
     assert out["order_quantity_eoq"] > 0
 
 
+@pytest.mark.offline_helper
 def test_disruption_scores():
     res = disruption_intel.predict_disruptions(
         [

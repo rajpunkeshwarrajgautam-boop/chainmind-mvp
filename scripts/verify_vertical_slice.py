@@ -20,11 +20,24 @@ import json
 import os
 import sys
 import uuid
+import warnings
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
 _ROOT = Path(__file__).resolve().parent.parent
+
+
+def _silence_authlib_jose_deprecation() -> None:
+    """Match tests/conftest.py: Authlib forces 'always' for AuthlibDeprecationWarning; prepend ignore after."""
+    try:
+        import authlib.deprecate  # noqa: F401
+        from authlib.deprecate import AuthlibDeprecationWarning
+    except ImportError:
+        return
+    warnings.filterwarnings("ignore", category=AuthlibDeprecationWarning)
+
+
 if str(_ROOT) not in sys.path:
     sys.path.insert(0, str(_ROOT))
 
@@ -209,6 +222,7 @@ def _run_slice_testclient(client: Any, base_label: str) -> int:
 
 
 def main() -> int:
+    _silence_authlib_jose_deprecation()
     parser = argparse.ArgumentParser(description="Vertical slice smoke test")
     parser.add_argument(
         "--in-process",
